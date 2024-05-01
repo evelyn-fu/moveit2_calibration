@@ -361,7 +361,7 @@ bool ControlTabWidget::takeTransformSamples()
     camera_to_object_tf = tf_buffer_->lookupTransform(frame_names_["sensor"], frame_names_["object"], rclcpp::Time(0));
 
     // Get the transform of the end-effector w.r.t the robot base
-    base_to_eef_tf = tf_buffer_->lookupTransform(frame_names_["base"], frame_names_["eef"], rclcpp::Time(0));
+    base_to_eef_tf = tf_buffer_->lookupTransform("external_base", "external_eef", rclcpp::Time(0)); // edit: replaced with getting message from drake
 
     // Renormalize quaternions, to avoid numerical issues
     tf2::Quaternion tf2_quat;
@@ -563,32 +563,32 @@ void ControlTabWidget::takeSampleBtnClicked(bool clicked)
     if (!solveCameraRobotPose())
       return;
 
-  // Save the joint values of current robot state
-  if (planning_scene_monitor_)
-  {
-    planning_scene_monitor_->waitForCurrentRobotState(rclcpp::Clock(RCL_ROS_TIME).now(), 0.1);  // Revisit this change
-    const planning_scene_monitor::LockedPlanningSceneRO& ps =
-        planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor_);
-    if (ps)
-    {
-      const moveit::core::RobotState& state = ps->getCurrentState();
-      const moveit::core::JointModelGroup* jmg = state.getJointModelGroup(group_name_->currentText().toStdString());
-      const std::vector<std::string>& names = jmg->getActiveJointModelNames();
-      if (joint_names_.size() != names.size() || joint_names_ != names)
-      {
-        joint_names_.clear();
-        joint_states_.clear();
-      }
-      std::vector<double> state_joint_values;
-      state.copyJointGroupPositions(jmg, state_joint_values);
-      if (names.size() == state_joint_values.size())
-      {
-        joint_names_ = names;
-        joint_states_.push_back(state_joint_values);
-        auto_progress_->setMax(joint_states_.size());
-      }
-    }
-  }
+  // // Save the joint values of current robot state
+  // if (planning_scene_monitor_)
+  // {
+  //   planning_scene_monitor_->waitForCurrentRobotState(rclcpp::Clock(RCL_ROS_TIME).now(), 0.1);  // Revisit this change
+  //   const planning_scene_monitor::LockedPlanningSceneRO& ps =
+  //       planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor_);
+  //   if (ps)
+  //   {
+  //     const moveit::core::RobotState& state = ps->getCurrentState();
+  //     const moveit::core::JointModelGroup* jmg = state.getJointModelGroup(group_name_->currentText().toStdString());
+  //     const std::vector<std::string>& names = jmg->getActiveJointModelNames();
+  //     if (joint_names_.size() != names.size() || joint_names_ != names)
+  //     {
+  //       joint_names_.clear();
+  //       joint_states_.clear();
+  //     }
+  //     std::vector<double> state_joint_values;
+  //     state.copyJointGroupPositions(jmg, state_joint_values);
+  //     if (names.size() == state_joint_values.size())
+  //     {
+  //       joint_names_ = names;
+  //       joint_states_.push_back(state_joint_values);
+  //       auto_progress_->setMax(joint_states_.size());
+  //     }
+  //   }
+  // }
 }
 
 void ControlTabWidget::clearSamplesBtnClicked(bool clicked)
@@ -722,7 +722,7 @@ void ControlTabWidget::fillPlanningGroupNameComboBox()
 {
   group_name_->clear();
   // Fill in available planning group names
-  planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor(node_, "robot_description", tf_buffer_,
+  planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor(node_, "robot_description",
                                                                                  "planning_scene_monitor"));
   if (planning_scene_monitor_)
   {
@@ -1029,7 +1029,7 @@ void ControlTabWidget::computePlan()
     move_group_->setMaxVelocityScalingFactor(0.5);
     move_group_->setMaxAccelerationScalingFactor(0.5);
     current_plan_.reset(new moveit::planning_interface::MoveGroupInterface::Plan());
-    planning_res_ = (move_group_->plan(*current_plan_) == moveit::planning_interface::MoveItErrorCode::SUCCESS) ?
+    planning_res_ = (move_group_->plan(*current_plan_) == moveit::core::MoveItErrorCode::SUCCESS) ?
                         ControlTabWidget::SUCCESS :
                         ControlTabWidget::FAILURE_PLAN_FAILED;
 
@@ -1054,7 +1054,7 @@ void ControlTabWidget::autoExecuteBtnClicked(bool clicked)
 void ControlTabWidget::computeExecution()
 {
   if (move_group_ && current_plan_)
-    planning_res_ = (move_group_->execute(*current_plan_) == moveit::planning_interface::MoveItErrorCode::SUCCESS) ?
+    planning_res_ = (move_group_->execute(*current_plan_) == moveit::core::MoveItErrorCode::SUCCESS) ?
                         ControlTabWidget::SUCCESS :
                         ControlTabWidget::FAILURE_PLAN_FAILED;
 

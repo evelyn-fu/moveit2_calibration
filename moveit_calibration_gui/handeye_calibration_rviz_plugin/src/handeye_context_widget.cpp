@@ -66,6 +66,10 @@ void TFFrameNameComboBox::mousePressEvent(QMouseEvent* event)
         if (it == robot_links.end() && index == std::string::npos)
           addItem(QString(name.c_str()));
     }
+    if (frame_source_ == ROBOT_FRAME) {
+      addItem(QString("external_eef"));
+      addItem(QString("external_base"));
+    }
   }
   showPopup();
 }
