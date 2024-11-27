@@ -243,6 +243,26 @@ ControlTabWidget::ControlTabWidget(rclcpp::Node::SharedPtr node, HandEyeCalibrat
   // Set initial status
   calibration_display_->setStatus(rviz_common::properties::StatusProperty::Ok, "Calibration",
                                   "Collect 5 samples to start calibration.");
+
+  // Subscribe to external take sample signals
+  take_sample_subscriber_ = node_->create_subscription<std_msgs::msg::String>(
+    "external_take_sample_trigger", 10, std::bind(&ControlTabWidget::takeSampleCallback, this, std::placeholders::_1));
+
+}
+
+// callback method for when drake_take_sample message is received
+void ControlTabWidget::takeSampleCallback(const std_msgs::msg::String::SharedPtr msg) {
+  // Log the received message to check its content and topic
+  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Received message: '%s'", msg->data.c_str());
+
+  // Optional: If you want to check for specific content in the message
+  if (msg->data == "Trigger") {  // Example check on the message content
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Trigger word detected, calling takeSampleBtnClicked!");
+    takeSampleBtnClicked(true); // Trigger the slot if the message matches the condition
+  }
+  else {
+    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Message does not match expected content");
+  }
 }
 
 void ControlTabWidget::loadWidget(const rviz_common::Config& config)

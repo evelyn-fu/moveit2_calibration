@@ -168,6 +168,8 @@ public Q_SLOTS:
 
 private Q_SLOTS:
 
+  void takeSampleCallback(const std_msgs::msg::String::SharedPtr msg);
+
   void takeSampleBtnClicked(bool clicked);
 
   void clearSamplesBtnClicked(bool clicked);
@@ -257,6 +259,7 @@ private:
   // Ros components
   // **************************************************************
   rclcpp::Node::SharedPtr node_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr take_sample_subscriber_;
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
   rviz_visual_tools::TFVisualToolsPtr tf_tools_;
