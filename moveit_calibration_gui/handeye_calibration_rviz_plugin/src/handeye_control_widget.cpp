@@ -246,7 +246,7 @@ ControlTabWidget::ControlTabWidget(rclcpp::Node::SharedPtr node, HandEyeCalibrat
 
   // Subscribe to external take sample signals
   take_sample_subscriber_ = node_->create_subscription<std_msgs::msg::String>(
-    "external_take_sample_trigger", 10, std::bind(&ControlTabWidget::takeSampleCallback, this, std::placeholders::_1));
+    "external_take_sample_trigger", 20, std::bind(&ControlTabWidget::takeSampleCallback, this, std::placeholders::_1));
 
 }
 
@@ -639,7 +639,7 @@ void ControlTabWidget::saveCameraPoseBtnClicked(bool clicked)
   // DontUseNativeDialog option set to avoid this issue: https://github.com/ros-planning/moveit/issues/2357
   QString file_name = QFileDialog::getSaveFileName(
       this, tr("Save Camera Robot Pose"), "",
-      tr("Launch scripts - ALL (*.launch* *.py *.xml *.yaml *.yml);;Launch scripts - "
+      tr("Launch scripts - ALL (*.launch* *.py *.xml *.yaml *.yml *.txt);;Launch scripts - "
          "PYTHON (*.launch.py *.py);;Launch scripts - XML (*.launch *.launch.xml *.xml);;Launch "
          "scripts - YAML (*.launch.yaml *.launch.yml *.yaml *.yml);;All Files (*)"),
       nullptr, QFileDialog::DontUseNativeDialog);
@@ -648,7 +648,7 @@ void ControlTabWidget::saveCameraPoseBtnClicked(bool clicked)
     return;
 
   if (!file_name.contains("."))
-    file_name += ".launch.py";
+    file_name += ".txt";
   else if (file_name.endsWith(".launch"))
     file_name += ".py";
 
@@ -689,6 +689,10 @@ void ControlTabWidget::saveCameraPoseBtnClicked(bool clicked)
   else if (file_name.endsWith(".yaml") || file_name.endsWith(".yml"))
   {
     ss = generateCalibrationYaml(from_frame, to_frame, t, r_quat, r_euler, mount_type);
+  }
+  else if (file_name.endsWith(".txt"))
+  {
+    ss = generateCalibrationTxt(from_frame, to_frame, t, r_quat, r_euler, mount_type);
   }
   else
   {
@@ -1250,6 +1254,20 @@ std::stringstream ControlTabWidget::generateCalibrationYaml(std::string& from_fr
   ss << "              # --roll " << r_euler[0] << std::endl;
   ss << "              # --pitch " << r_euler[1] << std::endl;
   ss << "              # --yaw " << r_euler[2] << std::endl;
+  return ss;
+}
+
+std::stringstream ControlTabWidget::generateCalibrationTxt(std::string& from_frame, std::string& to_frame,
+                                                            Eigen::Vector3d& t, Eigen::Quaterniond& r_quat,
+                                                            Eigen::Vector3d& r_euler, std::string& mount_type)
+{
+  Eigen::Matrix3d R = r_quat.toRotationMatrix();
+
+  std::stringstream ss;
+  ss << R(0, 0) << " " << R(0, 1) << " " << R(0, 2) << " " << t[0] << std::endl;
+  ss << R(1, 0) << " " << R(1, 1) << " " << R(1, 2) << " " << t[1] << std::endl;
+  ss << R(2, 0) << " " << R(2, 1) << " " << R(2, 2) << " " << t[2] << std::endl;
+  ss << "0 0 0 1" << std::endl;
   return ss;
 }
 

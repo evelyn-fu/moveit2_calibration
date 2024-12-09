@@ -281,6 +281,9 @@ private:
   std::stringstream generateCalibrationYaml(std::string& from_frame, std::string& to_frame, Eigen::Vector3d& t,
                                             Eigen::Quaterniond& r_quat, Eigen::Vector3d& r_euler,
                                             std::string& mount_type);
+  std::stringstream generateCalibrationTxt(std::string& from_frame, std::string& to_frame, Eigen::Vector3d& t,
+                                            Eigen::Quaterniond& r_quat, Eigen::Vector3d& r_euler,
+                                            std::string& mount_type);
 };
 
 }  // namespace moveit_rviz_plugin

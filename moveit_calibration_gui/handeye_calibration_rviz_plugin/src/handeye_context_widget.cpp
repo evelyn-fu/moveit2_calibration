@@ -305,7 +305,7 @@ void ContextTabWidget::setTFTool(rviz_visual_tools::TFVisualToolsPtr& tf_pub)
 
 void ContextTabWidget::updateAllMarkers()
 {
-  if (visual_tools_ && tf_tools_)
+  if (false && visual_tools_ && tf_tools_) // temporarily disable, might be segfaulting here
   {
     visual_tools_->deleteAllMarkers();
     tf_tools_->clearAllTransforms();
